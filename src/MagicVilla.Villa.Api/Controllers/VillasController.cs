@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using MagicVilla.Villa.Api.Data;
+using MagicVilla.Villa.Api.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using VillaItem = MagicVilla.Villa.Api.Models.Villa;
 
 namespace MagicVilla.Villa.Api.Controllers
 {
@@ -13,20 +10,9 @@ namespace MagicVilla.Villa.Api.Controllers
     public class VillasController : ControllerBase
     {
         [HttpGet]
-        public IEnumerable<VillaItem> Get() 
+        public IEnumerable<VillaDto> Get() 
         {
-            var results = new List<VillaItem> {
-                new() {
-                    Id = 1,
-                    Name = "Beach View"
-                },
-                new() {
-                    Id = 2,
-                    Name = "City View"
-                } 
-            };
-
-            return results;
+            return VillaStore.VillaDtos;
         }
     }
 }
