@@ -59,8 +59,13 @@ namespace MagicVilla.Villa.Api.Controllers
         [HttpDelete("{id:int}", Name = "Delete")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult Delete([Required]int id)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult Delete(int id)
         {
+            if (id == 0)
+            {
+                return BadRequest();
+            }
             var villa = VillaStore.VillaDtos.Find(villa => villa.Id == id);
             if (villa == null) 
             {
