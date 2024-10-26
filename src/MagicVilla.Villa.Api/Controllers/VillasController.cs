@@ -44,6 +44,11 @@ namespace MagicVilla.Villa.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
+            if (VillaStore.VillaDtos.Find(villa => villa.Name.Equals(villaDto.Name, StringComparison.CurrentCultureIgnoreCase)) != null) 
+            {
+                ModelState.AddModelError("CustomError", $"Villa with the name {villaDto.Name} already exists.");
+                return BadRequest(ModelState);
+            }
 
             villaDto.Id = VillaStore.VillaDtos.OrderByDescending(villaDto => villaDto.Id).FirstOrDefault().Id + 1;
             VillaStore.VillaDtos.Add(villaDto);
