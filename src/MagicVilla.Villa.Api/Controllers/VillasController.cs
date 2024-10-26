@@ -21,8 +21,13 @@ namespace MagicVilla.Villa.Api.Controllers
         // [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(VillaDto))]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult<VillaDto> Get([Required]int id) 
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult<VillaDto> Get(int id) 
         {
+            if (id == 0)
+            {
+                return BadRequest();
+            }
             var villa = VillaStore.VillaDtos.FirstOrDefault(villa => villa.Id == id);
             if (villa == null)
                 return NotFound();
