@@ -1,6 +1,17 @@
+// using Serilog;   // For logging to a log file
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+
+/*
+ * For logging to a log file
+ 
+Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
+    .WriteTo.File("log/villaLogs.txt",rollingInterval: RollingInterval.Day).CreateLogger();
+
+builder.Host.UseSerilog();
+*/
 
 builder.Services.AddControllers(option => {
     // option.ReturnHttpNotAcceptable=true;
