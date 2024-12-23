@@ -16,7 +16,7 @@ Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
 builder.Host.UseSerilog();
 */
 builder.Services.AddDbContext<ApplicationDbContext>(option =>{
-    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"));
+    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSqlConnection"));
 });
 builder.Services.AddControllers(option => {
     // option.ReturnHttpNotAcceptable=true;
