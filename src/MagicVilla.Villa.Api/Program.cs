@@ -1,5 +1,8 @@
 // using Serilog;   // For logging to a log file
 
+using MagicVilla.Villa.Api.Data;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -12,7 +15,9 @@ Log.Logger = new LoggerConfiguration().MinimumLevel.Debug()
 
 builder.Host.UseSerilog();
 */
-
+builder.Services.AddDbContext<ApplicationDbContext>(option =>{
+    option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString"));
+});
 builder.Services.AddControllers(option => {
     // option.ReturnHttpNotAcceptable=true;
 }).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
