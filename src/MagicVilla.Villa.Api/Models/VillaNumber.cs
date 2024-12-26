@@ -10,5 +10,10 @@ namespace MagicVilla.Villa.Api.Models
         public string SpecialDetails { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
+        // Foreign key property
+        public int VillaId { get; set; }
+        // Navigation Property
+        [ForeignKey("VillaId")]
+        public Villa Villa { get; set; } // Reference to the parent Villa
     }
 }
