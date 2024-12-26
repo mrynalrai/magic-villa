@@ -4,7 +4,7 @@ using MagicVilla.Villa.Api.Repositories.IRepositories;
 
 namespace MagicVilla.Villa.Api.Repositories
 {
-    public class VillaNumberRepository : Repository<Models.Villa>, IVillaNumberRepository
+    public class VillaNumberRepository : Repository<VillaNumber>, IVillaNumberRepository
     {
         private readonly ApplicationDbContext _dbContext;
 
