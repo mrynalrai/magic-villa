@@ -109,13 +109,25 @@ namespace MagicVilla.Villa.Api.Controllers
                 }
                 if (await _villaNumberRepository.GetAsync(villaNum => villaNum.VillaNum == createDto.VillaNum) != null)
                 {
-                    ModelState.AddModelError("CustomError", $"VillaNumber with the villa number {createDto.VillaNum} already exists.");
-                    return BadRequest(ModelState);
+                    // ModelState.AddModelError("ErrorMessages", $"VillaNumber with the villa number {createDto.VillaNum} already exists.");
+                    // return BadRequest(ModelState);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = [
+                        $"VillaNumber with the villa number {createDto.VillaNum} already exists."
+                    ];
+                    return BadRequest(_response);
                 }
                 if (await _villaRepository.GetAsync(villa => villa.Id == createDto.VillaId) == null)
                 {
-                    ModelState.AddModelError("CustomError", $"Villa ID {createDto.VillaId} is invalid.");
-                    return BadRequest(ModelState);
+                    // ModelState.AddModelError("ErrorMessages", $"Villa ID {createDto.VillaId} is invalid.");
+                    // return BadRequest(ModelState);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = [
+                        $"Villa ID {createDto.VillaId} is invalid."
+                    ];
+                    return BadRequest(_response);
                 }
 
                 VillaNumber villaNum = _mapper.Map<VillaNumber>(createDto);
@@ -149,7 +161,10 @@ namespace MagicVilla.Villa.Api.Controllers
             {
                 if (id == 0)
                 {
-                    return BadRequest();
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                    // return BadRequest();
                 }
                 var villaNum = await _villaNumberRepository.GetAsync(villa => villa.VillaNum == id);
                 if (villaNum == null) 
@@ -185,7 +200,10 @@ namespace MagicVilla.Villa.Api.Controllers
             {
                 if (updateDto == null || updateDto.VillaNum != id)
                 {
-                    return BadRequest();
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                    // return BadRequest();
                 }
 
                 var villaNum = await _villaNumberRepository.GetAsync(villa => villa.VillaNum == id);
@@ -196,8 +214,14 @@ namespace MagicVilla.Villa.Api.Controllers
                 
                 if (await _villaRepository.GetAsync(villa => villa.Id == updateDto.VillaId) == null)
                 {
-                    ModelState.AddModelError("CustomError", $"Villa ID {updateDto.VillaId} is invalid.");
-                    return BadRequest(ModelState);
+                    // ModelState.AddModelError("ErrorMessages", $"Villa ID {updateDto.VillaId} is invalid.");
+                    // return BadRequest(_response);
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    _response.ErrorMessages = [
+                        $"Villa ID {updateDto.VillaId} is invalid."
+                    ];
+                    return BadRequest(_response);
                 }
 
                 _mapper.Map(updateDto, villaNum);
