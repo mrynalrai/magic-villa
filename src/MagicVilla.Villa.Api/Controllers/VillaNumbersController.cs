@@ -8,9 +8,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MagicVilla.Villa.Api.Controllers
 {
-    [Route("api/villanumbers")]
+    [Route("api/v{version:apiVersion}/villanumbers")]
     [ApiController]
     [ApiVersion("1.0")]
+    [ApiVersion("2.0")]
     public class VillaNumbersController : ControllerBase
     {
         protected ApiResponse _response;
@@ -33,6 +34,7 @@ namespace MagicVilla.Villa.Api.Controllers
         }
 
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -59,6 +61,20 @@ namespace MagicVilla.Villa.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, _response);
             }
         }
+
+        [HttpGet]
+        [MapToApiVersion("2.0")]
+        public async Task<ActionResult<ApiResponse>> GetVillaNumbers()
+        {
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            _response.Result = new string[]
+            {
+                "value1", "value2"
+            };
+
+            return Ok(_response);
+        } 
 
         [HttpGet("{id:int}", Name = "GetVillaNumber")]
         [Authorize]
