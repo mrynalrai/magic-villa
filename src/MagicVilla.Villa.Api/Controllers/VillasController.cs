@@ -11,8 +11,9 @@ using VillaModel = MagicVilla.Villa.Api.Models.Villa;
 namespace MagicVilla.Villa.Api.Controllers
 {
     // [Route("[controller]")]
-    [Route("api/villas")]
+    [Route("api/v{version:apiVersion}/villas")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class VillasController : ControllerBase
     {
         protected ApiResponse _response;
