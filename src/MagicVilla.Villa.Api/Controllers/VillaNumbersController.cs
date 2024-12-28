@@ -10,6 +10,7 @@ namespace MagicVilla.Villa.Api.Controllers
 {
     [Route("api/villanumbers")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class VillaNumbersController : ControllerBase
     {
         protected ApiResponse _response;
