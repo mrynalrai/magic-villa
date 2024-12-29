@@ -40,12 +40,28 @@ namespace MagicVilla.Villa.Api.Controllers.v1
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse>> Get() 
+        public async Task<ActionResult<ApiResponse>> Get(
+            [FromQuery(Name = "filterOccupancy")]int? occupancy,
+            [FromQuery]string? search    
+        ) 
         {
             _logger.LogInformation("Getting all villas");
             try 
             {
-                IEnumerable<VillaModel> villas = await _villaRepository.GetAllAsync();
+                IEnumerable<VillaModel> villas;
+                if (occupancy > 0)
+                {
+                    villas = await _villaRepository.GetAllAsync(villa => villa.Occupancy == occupancy);
+                }
+                else
+                {
+                    villas = await _villaRepository.GetAllAsync();
+                }
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    villas = villas.Where(villa => villa.Name.ToUpper().Contains(search.ToUpper()));
+                }
+                 
                 _response.Result = _mapper.Map<List<VillaDto>>(villas);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
