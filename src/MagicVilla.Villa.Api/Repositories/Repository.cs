@@ -2,6 +2,7 @@ using System.Linq.Expressions;
 using MagicVilla.Villa.Api.Data;
 using MagicVilla.Villa.Api.Repositories.IRepositories;
 using Microsoft.EntityFrameworkCore;
+using static MagicVilla.Villa.Api.Common.Constants;
 
 namespace MagicVilla.Villa.Api.Repositories
 {
@@ -42,12 +43,25 @@ namespace MagicVilla.Villa.Api.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
-        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null, string? includeProperties = null)
+        public async Task<List<T>> GetAllAsync(
+            Expression<Func<T, bool>>? filter = null, 
+            string? includeProperties = null,
+            int? pageSize = null, 
+            int? pageNumber = null
+        )
         {
             IQueryable<T>  query = dbSet;
 
             if (filter != null) {
                 query = query.Where(filter);
+            }
+            if (pageNumber.HasValue && pageSize.HasValue)
+            {
+                if (pageSize > MaxPageSize)
+                {
+                    pageSize = MaxPageSize;
+                }
+                query = query.Skip(pageSize.Value * (pageNumber.Value - 1)).Take(pageSize.Value);
             }
             if (includeProperties != null)
             {

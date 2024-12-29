@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using AutoMapper;
 using MagicVilla.Villa.Api.Models;
 using MagicVilla.Villa.Api.Models.Dtos;
@@ -37,31 +38,52 @@ namespace MagicVilla.Villa.Api.Controllers.v1
         // [ResponseCache(Duration = 30)]  // 30 seconds
         [ResponseCache(CacheProfileName = "Default30")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ApiResponse>> Get(
             [FromQuery(Name = "filterOccupancy")]int? occupancy,
-            [FromQuery]string? search    
+            [FromQuery]string? search,
+            [FromQuery]int pageSize = 10,
+            [FromQuery]int pageNumber = 1
         ) 
         {
             _logger.LogInformation("Getting all villas");
             try 
             {
                 IEnumerable<VillaModel> villas;
+                if (pageNumber < 0 || pageSize < 0)
+                {
+                    _logger.LogError($"Inavlid Page size or Page number");
+                    _response.ErrorMessages = new List<string>()
+                    {
+                        $"Inavlid Page size or Page number"
+                    };
+                    _response.IsSuccess = false;
+                    _response.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest(_response);
+                }
                 if (occupancy > 0)
                 {
-                    villas = await _villaRepository.GetAllAsync(villa => villa.Occupancy == occupancy);
+                    villas = await _villaRepository.GetAllAsync(villa => villa.Occupancy == occupancy, pageSize: pageSize, pageNumber: pageNumber);
                 }
                 else
                 {
-                    villas = await _villaRepository.GetAllAsync();
+                    villas = await _villaRepository.GetAllAsync(pageSize: pageSize, pageNumber: pageNumber);
                 }
                 if (!string.IsNullOrWhiteSpace(search))
                 {
                     villas = villas.Where(villa => villa.Name.ToUpper().Contains(search.ToUpper()));
                 }
                  
+                Pagination pagination = new Pagination
+                {
+                    PageNumber = pageNumber,
+                    PageSize = pageSize
+                };
+
+                Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
                 _response.Result = _mapper.Map<List<VillaDto>>(villas);
                 _response.StatusCode = HttpStatusCode.OK;
                 return Ok(_response);
