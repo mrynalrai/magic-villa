@@ -31,15 +31,15 @@ namespace MagicVilla.Villa.Api.Controllers.v2
             this._response = new();
         }
 
-        [HttpGet]
+        [HttpGet("GetString")]
         // [MapToApiVersion("2.0")]
-        public async Task<ActionResult<ApiResponse>> GetVillaNumbers()
+        public async Task<ActionResult<ApiResponse>> Get()
         {
             _response.StatusCode = HttpStatusCode.OK;
             _response.IsSuccess = true;
             _response.Result = new string[]
             {
-                "value1", "value2"
+                "Mrinal", "Rai"
             };
 
             return Ok(_response);

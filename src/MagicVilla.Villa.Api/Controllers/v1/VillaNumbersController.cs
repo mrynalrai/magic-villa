@@ -261,5 +261,19 @@ namespace MagicVilla.Villa.Api.Controllers.v1
                 return StatusCode(StatusCodes.Status500InternalServerError, _response);
             }
         }
+
+        [HttpGet("GetString")]
+        // [MapToApiVersion("2.0")]
+        public async Task<ActionResult<ApiResponse>> GetString()
+        {
+            _response.StatusCode = HttpStatusCode.OK;
+            _response.IsSuccess = true;
+            _response.Result = new string[]
+            {
+                "String1", "String2"
+            };
+
+            return Ok(_response);
+        } 
     }
 }
