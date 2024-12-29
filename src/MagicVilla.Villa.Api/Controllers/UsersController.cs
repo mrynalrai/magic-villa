@@ -4,11 +4,11 @@ using MagicVilla.Villa.Api.Models.Dtos;
 using MagicVilla.Villa.Api.Repositories.IRepositories;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MagicVilla.Villa.Api.Controllers.v1
+namespace MagicVilla.Villa.Api.Controllers
 {
     [Route("api/v{version:apiVersion}/auth")]
     [ApiController]
-    [ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class UsersController : ControllerBase
     {
         protected ApiResponse _apiResponse;
