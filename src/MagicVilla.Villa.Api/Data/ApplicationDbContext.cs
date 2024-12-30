@@ -1,21 +1,24 @@
 using MagicVilla.Villa.Api.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using VillaModel = MagicVilla.Villa.Api.Models.Villa;
 
 namespace MagicVilla.Villa.Api.Data
 {
-    public class ApplicationDbContext : DbContext
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
             
         }
+        public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<VillaModel> Villas { get; set; }
         public DbSet<VillaNumber> VillaNumbers { get; set; }
         public DbSet<LocalUser> LocalUsers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            base.OnModelCreating(modelBuilder);
             var createdDate = new DateTime(2024, 12, 23, 0, 0, 0);
             modelBuilder.Entity<VillaModel>().HasData(
                 new VillaModel()
