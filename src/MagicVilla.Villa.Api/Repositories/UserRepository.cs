@@ -108,6 +108,7 @@ namespace MagicVilla.Villa.Api.Repositories
                 var result = await _userManager.CreateAsync(user, registrationRequestDto.Password);
                 if (result.Succeeded)
                 {
+                    // TODO - Allow admins to create roles
                     if (!_roleManager.RoleExistsAsync("admin").GetAwaiter().GetResult())
                     {
                         await _roleManager.CreateAsync(new IdentityRole("admin"));

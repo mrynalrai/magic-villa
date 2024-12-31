@@ -3,6 +3,7 @@ using MagicVilla.Villa.Api.Models.Dtos;
 
 namespace MagicVilla.Villa.Api.Repositories.IRepositories
 {
+    // TODO: Move below methods to service layer
     public interface IUserRepository : IRepository<LocalUser>
     {
         bool IsUniqueUser(string username);
