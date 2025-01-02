@@ -244,6 +244,18 @@ namespace MagicVilla.Villa.Api.Controllers.v2
                 {
                     return NotFound();
                 }
+
+                if (!string.IsNullOrWhiteSpace(villa.ImageLocalPath))
+                {
+                    var oldFilePathDirectoy = Path.Combine(Directory.GetCurrentDirectory(), villa.ImageLocalPath);
+                    FileInfo file = new FileInfo(oldFilePathDirectoy);
+
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+                }
+
                 await _villaRepository.RemoveAsync(villa);
                 
                 _response.StatusCode = HttpStatusCode.OK;
@@ -270,7 +282,7 @@ namespace MagicVilla.Villa.Api.Controllers.v2
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse>> Update(int id, [FromBody]VillaUpdateDto updateDto)
+        public async Task<ActionResult<ApiResponse>> Update(int id, [FromForm]VillaUpdateDto updateDto)
         {
             try
             {
@@ -292,6 +304,38 @@ namespace MagicVilla.Villa.Api.Controllers.v2
                 }
 
                 _mapper.Map(updateDto, villa);
+
+                if (updateDto.Image != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(villa.ImageLocalPath))
+                    {
+                        var oldFilePathDirectoy = Path.Combine(Directory.GetCurrentDirectory(), villa.ImageLocalPath);
+                        FileInfo file = new FileInfo(oldFilePathDirectoy);
+
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                    }
+
+                    string fileName = villa.Id + Path.GetExtension(updateDto.Image.FileName);
+                    string filePath = Path.Combine("wwwroot", "ProductImage", fileName);
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        updateDto.Image.CopyTo(fileStream);
+                    }
+
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    villa.ImageUrl = baseUrl+"/ProductImage/"+fileName;
+                    villa.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    villa.ImageUrl = DefaultImageUrl;
+                }
 
                 await _villaRepository.UpdateAsync(villa);
 
