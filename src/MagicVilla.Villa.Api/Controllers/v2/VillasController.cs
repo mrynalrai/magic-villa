@@ -7,6 +7,7 @@ using MagicVilla.Villa.Api.Repositories.IRepositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using static MagicVilla.Villa.Api.Common.Constants;
 using VillaModel = MagicVilla.Villa.Api.Models.Villa;
 
 namespace MagicVilla.Villa.Api.Controllers.v2
@@ -150,7 +151,7 @@ namespace MagicVilla.Villa.Api.Controllers.v2
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ApiResponse>> Create([FromBody] VillaCreateDto createDto) 
+        public async Task<ActionResult<ApiResponse>> Create([FromForm] VillaCreateDto createDto) 
         {
             try
             {
@@ -172,6 +173,34 @@ namespace MagicVilla.Villa.Api.Controllers.v2
                 }
 
                 VillaModel villa = _mapper.Map<VillaModel>(createDto);
+
+                if (createDto.Image != null)
+                {
+                    string fileName = villa.Id + Path.GetExtension(createDto.Image.FileName);
+                    string filePath = Path.Combine("wwwroot", "ProductImage", fileName);
+
+                    var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+
+                    FileInfo file = new FileInfo(directoryLocation);
+
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+
+                    using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                    {
+                        createDto.Image.CopyTo(fileStream);
+                    }
+
+                    var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                    villa.ImageUrl = baseUrl+"/ProductImage/"+fileName;
+                    villa.ImageLocalPath = filePath;
+                }
+                else
+                {
+                    villa.ImageUrl = DefaultImageUrl;
+                }
 
                 await _villaRepository.CreateAsync(villa);
 
