@@ -83,10 +83,12 @@ namespace MagicVilla.Villa.Api.Repositories
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
+            var userResponseDto = _mapper.Map<UserDto>(user);
+            userResponseDto.Role = roles.FirstOrDefault();
             LoginResponseDto loginResponseDto = new LoginResponseDto ()
             {
                 Token = tokenHandler.WriteToken(token),
-                User = _mapper.Map<UserDto>(user),
+                User = userResponseDto,
                 // Role = roles.FirstOrDefault()
             };
             return loginResponseDto;
