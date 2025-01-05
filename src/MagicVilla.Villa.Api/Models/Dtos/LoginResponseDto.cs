@@ -5,6 +5,6 @@ namespace MagicVilla.Villa.Api.Models.Dtos
         // public LocalUser User { get; set; }
         public UserDto User { get; set; }
         // public string Role { get; set; } You can extract role from Token
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
     }
 }

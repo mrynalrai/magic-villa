@@ -2,6 +2,7 @@ using System.Net;
 using MagicVilla.Villa.Api.Models;
 using MagicVilla.Villa.Api.Models.Dtos;
 using MagicVilla.Villa.Api.Repositories.IRepositories;
+using MagicVilla.Villa.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MagicVilla.Villa.Api.Controllers
@@ -9,15 +10,20 @@ namespace MagicVilla.Villa.Api.Controllers
     [Route("api/v{version:apiVersion}/auth")]
     [ApiController]
     [ApiVersionNeutral]
-    public class UsersController : ControllerBase
+    public class AuthenticationController : ControllerBase
     {
         protected ApiResponse _apiResponse;
         private readonly IUserRepository _userRepository;
+        private readonly IAuthenticationService _authenticationService;
 
-        public UsersController(IUserRepository userRepository)
+        public AuthenticationController(
+            IUserRepository userRepository, 
+            IAuthenticationService authenticationService
+        )
         {
             _userRepository = userRepository;
             this._apiResponse = new();
+            _authenticationService = authenticationService;
         }
 
         [HttpPost("login")]
@@ -25,8 +31,8 @@ namespace MagicVilla.Villa.Api.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Login([FromBody] LoginRequestDto model)
         {
-            var loginResponse = await _userRepository.Login(model);
-            if (loginResponse.User == null || string.IsNullOrWhiteSpace(loginResponse.Token))
+            var loginResponse = await _authenticationService.Login(model);
+            if (loginResponse.User == null || string.IsNullOrWhiteSpace(loginResponse.AccessToken))
             {
                 _apiResponse.StatusCode = HttpStatusCode.BadRequest;
                 _apiResponse.IsSuccess = false;
@@ -59,7 +65,7 @@ namespace MagicVilla.Villa.Api.Controllers
                 return BadRequest(_apiResponse);
             }
 
-            var user = await _userRepository.Register(model);
+            var user = await _authenticationService.Register(model);
             if (user == null)
             {
                 _apiResponse.StatusCode = HttpStatusCode.BadRequest;
