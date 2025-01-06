@@ -81,5 +81,42 @@ namespace MagicVilla.Villa.Api.Controllers
             _apiResponse.IsSuccess = true;
             return Ok(_apiResponse);
         }
+
+        [HttpPost("refresh")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetNewTokenFromRefreshToken([FromBody] TokenDto tokenDto)
+        {
+            if (ModelState.IsValid)
+            {
+                var tokenDtoResponse = await _authenticationService.RefreshAccessToken(tokenDto);
+                if (tokenDtoResponse == null || string.IsNullOrWhiteSpace(tokenDtoResponse.AccessToken))
+                {
+                    _apiResponse.IsSuccess = false;
+                    _apiResponse.ErrorMessages = new List<string>
+                    {
+                        "Something went wrong while generating access token"
+                    };
+                    _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+                    return BadRequest(_apiResponse);
+                }
+
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+                _apiResponse.IsSuccess = true;
+                _apiResponse.Result = tokenDto;
+                return Ok(_apiResponse);
+            }
+            else
+            {
+                _apiResponse.IsSuccess = false;
+                _apiResponse.ErrorMessages = new List<string>
+                {
+                    "Invalid Input"
+                };
+                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(_apiResponse);
+            }
+        }
     }
 }

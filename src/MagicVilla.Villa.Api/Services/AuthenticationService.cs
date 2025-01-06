@@ -70,6 +70,12 @@ namespace MagicVilla.Villa.Api.Services
             };
             return loginResponseDto;
         }
+
+        public Task<TokenDto> RefreshAccessToken(TokenDto tokenDto)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<UserDto> Register(RegistrationRequestDto registrationRequestDto)
         {
             ApplicationUser user = new() 
