@@ -16,6 +16,7 @@ namespace MagicVilla.Villa.Api.Services
         private readonly RoleManager<IdentityRole> _roleManager; 
         private readonly string _secretKey;
         private readonly IUserRepository _userRepository;
+        private readonly IRepository<RefreshToken> _refreshRepository;
         private readonly IMapper _mapper;
 
         public AuthenticationService(
@@ -59,7 +60,8 @@ namespace MagicVilla.Villa.Api.Services
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            var accessToken = await GetAccessToken(user, roles);
+            var jwtTokenId = $"JTI{Guid.NewGuid()}";
+            var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
             var userResponseDto = _mapper.Map<UserDto>(user);
             userResponseDto.Role = roles.FirstOrDefault();
             LoginResponseDto loginResponseDto = new LoginResponseDto ()
@@ -67,6 +69,7 @@ namespace MagicVilla.Villa.Api.Services
                 AccessToken = accessToken,
                 User = userResponseDto,
                 // Role = roles.FirstOrDefault()
+                RefreshAccessToken = refreshToken
             };
             return loginResponseDto;
         }
@@ -133,13 +136,27 @@ namespace MagicVilla.Villa.Api.Services
                     // new Claim(ClaimTypes.Role, user.Role)
                     new Claim(ClaimTypes.Role, roles.FirstOrDefault())
                 }),
-                Expires = DateTime.UtcNow.AddDays(7),
+                Expires = DateTime.UtcNow.AddMinutes(60),
                 SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenStr = tokenHandler.WriteToken(token);
             return tokenStr;
+        }
+        private async Task<string> CreateNewRefreshToken(string userId, string tokenId)
+        {
+            RefreshToken refreshToken = new()
+            {
+                IsValid = true,
+                UserId = userId,
+                JwtTokenId = tokenId,
+                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                RefreshTokenValue = Guid.NewGuid() + "-" + Guid.NewGuid()
+            };
+
+            await _refreshRepository.CreateAsync(refreshToken); 
+            return refreshToken.RefreshTokenValue;
         }
     }
 }
