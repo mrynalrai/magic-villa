@@ -16,7 +16,7 @@ namespace MagicVilla.Villa.Api.Services
         private readonly RoleManager<IdentityRole> _roleManager; 
         private readonly string _secretKey;
         private readonly IUserRepository _userRepository;
-        private readonly IRepository<RefreshToken> _refreshRepository;
+        private readonly IRepository<RefreshToken> _refreshTokenRepository;
         private readonly IMapper _mapper;
 
         public AuthenticationService(
@@ -24,6 +24,7 @@ namespace MagicVilla.Villa.Api.Services
             IConfiguration configuration,
             RoleManager<IdentityRole> roleManager,
             IUserRepository userRepository,
+            IRepository<RefreshToken> refreshTokenRepository,
             IMapper mapper
         )
         {
@@ -31,6 +32,7 @@ namespace MagicVilla.Villa.Api.Services
             _roleManager = roleManager;
             _secretKey = configuration.GetValue<string>("ApiSettings:Secret") ?? throw new InvalidOperationException("The 'ApiSettings:Secret' configuration value is missing or null.");
             _userRepository = userRepository;
+            _refreshTokenRepository = refreshTokenRepository;
             _mapper = mapper;
         }
 
@@ -61,6 +63,7 @@ namespace MagicVilla.Villa.Api.Services
             var roles = await _userManager.GetRolesAsync(user);
 
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
+            var accessToken = await GetAccessToken(user, roles);
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
             var userResponseDto = _mapper.Map<UserDto>(user);
             userResponseDto.Role = roles.FirstOrDefault();
@@ -155,7 +158,7 @@ namespace MagicVilla.Villa.Api.Services
                 RefreshTokenValue = Guid.NewGuid() + "-" + Guid.NewGuid()
             };
 
-            await _refreshRepository.CreateAsync(refreshToken); 
+            await _refreshTokenRepository.CreateAsync(refreshToken); 
             return refreshToken.RefreshTokenValue;
         }
     }
