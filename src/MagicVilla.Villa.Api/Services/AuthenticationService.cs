@@ -16,7 +16,7 @@ namespace MagicVilla.Villa.Api.Services
         private readonly RoleManager<IdentityRole> _roleManager; 
         private readonly string _secretKey;
         private readonly IUserRepository _userRepository;
-        private readonly IRepository<RefreshToken> _refreshTokenRepository;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IMapper _mapper;
 
         public AuthenticationService(
@@ -24,7 +24,7 @@ namespace MagicVilla.Villa.Api.Services
             IConfiguration configuration,
             RoleManager<IdentityRole> roleManager,
             IUserRepository userRepository,
-            IRepository<RefreshToken> refreshTokenRepository,
+            IRefreshTokenRepository refreshTokenRepository,
             IMapper mapper
         )
         {
