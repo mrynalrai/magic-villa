@@ -49,7 +49,7 @@ namespace MagicVilla.Villa.Api.Controllers
                 loginResponse.AccessToken,   
                 new CookieOptions
                 {
-                    HttpOnly = true, // Accessible only by the server
+                    HttpOnly = true, // Accessible only by the server and prevents javascript access to the cookie
                     Secure = false, // for development
                     SameSite = SameSiteMode.None,
                     Expires = DateTime.UtcNow.AddHours(1)
@@ -109,15 +109,15 @@ namespace MagicVilla.Villa.Api.Controllers
                     _apiResponse.IsSuccess = false;
                     _apiResponse.ErrorMessages = new List<string>
                     {
-                        "Something went wrong while generating access token"
+                        "Token invalid"
                     };
-                    _apiResponse.StatusCode = HttpStatusCode.InternalServerError;
+                    _apiResponse.StatusCode = HttpStatusCode.BadRequest;
                     return BadRequest(_apiResponse);
                 }
 
                 _apiResponse.StatusCode = HttpStatusCode.OK;
                 _apiResponse.IsSuccess = true;
-                _apiResponse.Result = tokenDto;
+                _apiResponse.Result = tokenDtoResponse;
                 return Ok(_apiResponse);
             }
             else
