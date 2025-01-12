@@ -42,6 +42,19 @@ namespace MagicVilla.Villa.Api.Controllers
                 };
                 return BadRequest(_apiResponse);
             }
+
+            // Add the token as a secure HttpOnly cookie
+            HttpContext.Response.Cookies.Append(
+                "jwt",
+                loginResponse.AccessToken,   
+                new CookieOptions
+                {
+                    HttpOnly = true, // Accessible only by the server
+                    Secure = false, // for development
+                    SameSite = SameSiteMode.None,
+                    Expires = DateTime.UtcNow.AddHours(1)
+                }
+            );
             _apiResponse.StatusCode = HttpStatusCode.OK;
             _apiResponse.IsSuccess = true;
             _apiResponse.Result = loginResponse;
