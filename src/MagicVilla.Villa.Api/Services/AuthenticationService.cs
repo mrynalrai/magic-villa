@@ -78,9 +78,47 @@ namespace MagicVilla.Villa.Api.Services
             return loginResponseDto;
         }
 
-        public Task<TokenDto> RefreshAccessToken(TokenDto tokenDto)
+        public async Task<TokenDto> RefreshAccessToken(TokenDto tokenDto)
         {
-            throw new NotImplementedException();
+            // Find an existing refresh token
+            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == tokenDto.RefreshToken);
+            if (existingRefreshToken == null) {
+                return new TokenDto();
+            }
+            // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
+            var accessTokenData = GetAccessTokenData(tokenDto.AccessToken);
+            if (!accessTokenData.isSuccessful 
+                || accessTokenData.userId != existingRefreshToken.UserId 
+                || accessTokenData.tokenId != existingRefreshToken.JwtTokenId)
+            {
+                existingRefreshToken.IsValid = false;
+                await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+            }
+            // When someone tries to use not valid refresh token, fraud possible
+            // If just expired then mark as invalid and return empty
+            if (existingRefreshToken.ExpiresAt < DateTime.UtcNow)
+            {
+                existingRefreshToken.IsValid = false;
+                await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+                return new TokenDto();
+            }
+            // replace old refresh token with a new one with updated expire date
+            var newRefreshToken = await CreateNewRefreshToken(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
+            // revoke exisitng refresh token
+            existingRefreshToken.IsValid = false;
+            await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+            // generate new access token
+            var applicationUser = await _userRepository.GetAsync(user => user.Id == existingRefreshToken.UserId);
+            if (applicationUser == null)
+                return new TokenDto();
+
+            var roles = await _userManager.GetRolesAsync(applicationUser);
+            var newAccessToken = await GetAccessToken(applicationUser, roles, existingRefreshToken.JwtTokenId);    // Using the same jwt token id because it maintain a relationship between all the refresh tokens. It is also known as Chain Id.
+
+            return new TokenDto{
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
+            };
         }
 
         public async Task<UserDto> Register(RegistrationRequestDto registrationRequestDto)
