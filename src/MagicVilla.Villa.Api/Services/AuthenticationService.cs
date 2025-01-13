@@ -63,7 +63,8 @@ namespace MagicVilla.Villa.Api.Services
             var roles = await _userManager.GetRolesAsync(user);
 
             var jwtTokenId = $"JTI{Guid.NewGuid()}";
-            var accessToken = await GetAccessToken(user, roles);
+            var accessToken = await GetAccessToken(user, roles, jwtTokenId);
+            // TODO: Handle the scenario when user relogins with active refresh token which leads to multiple refresh tokens
             var refreshToken = await CreateNewRefreshToken(user.Id, jwtTokenId);
             var userResponseDto = _mapper.Map<UserDto>(user);
             userResponseDto.Role = roles.FirstOrDefault();
@@ -126,7 +127,7 @@ namespace MagicVilla.Villa.Api.Services
             return new UserDto();
         }
         
-        private async Task<string> GetAccessToken(ApplicationUser user, IList<string>? roles)
+        private async Task<string> GetAccessToken(ApplicationUser user, IList<string>? roles, string jwtTokenId)
         {
             // If user was found, generate JWT 
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -137,7 +138,9 @@ namespace MagicVilla.Villa.Api.Services
                 {
                     new Claim(ClaimTypes.Name, user.UserName),
                     // new Claim(ClaimTypes.Role, user.Role)
-                    new Claim(ClaimTypes.Role, roles.FirstOrDefault())
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
+                    new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId),
+                    new Claim(JwtRegisteredClaimNames.Sub, user.Id)
                 }),
                 Expires = DateTime.UtcNow.AddMinutes(60),
                 SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
@@ -147,6 +150,23 @@ namespace MagicVilla.Villa.Api.Services
             var tokenStr = tokenHandler.WriteToken(token);
             return tokenStr;
         }
+
+        private (bool isSuccessful, string userId, string tokenId) GetAccessTokenData(string accessToken)
+        {
+            try
+            {
+                var tokenHandler = new JwtSecurityTokenHandler();
+                var jwt = tokenHandler.ReadJwtToken(accessToken);
+                var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
+                var userId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
+                return (true, userId, jwtTokenId);
+            }
+            catch
+            {
+                return (false, null, null);
+            }
+        }
+
         private async Task<string> CreateNewRefreshToken(string userId, string tokenId)
         {
             RefreshToken refreshToken = new()
