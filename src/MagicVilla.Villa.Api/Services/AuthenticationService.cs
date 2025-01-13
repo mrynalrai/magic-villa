@@ -85,6 +85,7 @@ namespace MagicVilla.Villa.Api.Services
             if (existingRefreshToken == null) {
                 return new TokenDto();
             }
+
             // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
             var accessTokenData = GetAccessTokenData(tokenDto.AccessToken);
             if (!accessTokenData.isSuccessful 
@@ -93,8 +94,23 @@ namespace MagicVilla.Villa.Api.Services
             {
                 existingRefreshToken.IsValid = false;
                 await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+                return new TokenDto();
             }
+            
             // When someone tries to use not valid refresh token, fraud possible
+            if (!existingRefreshToken.IsValid)
+            {
+                var chainRecords = await _refreshTokenRepository
+                    .GetAllAsync(u => 
+                        u.UserId == existingRefreshToken.UserId 
+                        && u.JwtTokenId == existingRefreshToken.JwtTokenId
+                    );
+                
+                chainRecords.ForEach(item => item.IsValid = false);
+                await _refreshTokenRepository.UpdateRangeAsync(chainRecords);
+                return new TokenDto();
+            }
+
             // If just expired then mark as invalid and return empty
             if (existingRefreshToken.ExpiresAt < DateTime.UtcNow)
             {
@@ -102,11 +118,14 @@ namespace MagicVilla.Villa.Api.Services
                 await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
                 return new TokenDto();
             }
+
             // replace old refresh token with a new one with updated expire date
             var newRefreshToken = await CreateNewRefreshToken(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
+            
             // revoke exisitng refresh token
             existingRefreshToken.IsValid = false;
             await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+            
             // generate new access token
             var applicationUser = await _userRepository.GetAsync(user => user.Id == existingRefreshToken.UserId);
             if (applicationUser == null)
@@ -212,7 +231,7 @@ namespace MagicVilla.Villa.Api.Services
                 IsValid = true,
                 UserId = userId,
                 JwtTokenId = tokenId,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(2),
                 RefreshTokenValue = Guid.NewGuid() + "-" + Guid.NewGuid()
             };
 
