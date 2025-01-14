@@ -87,10 +87,7 @@ namespace MagicVilla.Villa.Api.Services
             }
 
             // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
-            var accessTokenData = GetAccessTokenData(tokenDto.AccessToken);
-            if (!accessTokenData.isSuccessful 
-                || accessTokenData.userId != existingRefreshToken.UserId 
-                || accessTokenData.tokenId != existingRefreshToken.JwtTokenId)
+            if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
             {
                 existingRefreshToken.IsValid = false;
                 await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
@@ -208,7 +205,11 @@ namespace MagicVilla.Villa.Api.Services
             return tokenStr;
         }
 
-        private (bool isSuccessful, string userId, string tokenId) GetAccessTokenData(string accessToken)
+        private bool ValidateAccessToken(
+            string accessToken, 
+            string expectedUserId, 
+            string expectedTokenId
+        )
         {
             try
             {
@@ -216,11 +217,11 @@ namespace MagicVilla.Villa.Api.Services
                 var jwt = tokenHandler.ReadJwtToken(accessToken);
                 var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
                 var userId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
-                return (true, userId, jwtTokenId);
+                return userId == expectedUserId &&  jwtTokenId == expectedTokenId;
             }
             catch
             {
-                return (false, null, null);
+                return false;
             }
         }
 
