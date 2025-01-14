@@ -97,14 +97,7 @@ namespace MagicVilla.Villa.Api.Services
             // When someone tries to use not valid refresh token, fraud possible
             if (!existingRefreshToken.IsValid)
             {
-                var chainRecords = await _refreshTokenRepository
-                    .GetAllAsync(u => 
-                        u.UserId == existingRefreshToken.UserId 
-                        && u.JwtTokenId == existingRefreshToken.JwtTokenId
-                    );
-                
-                chainRecords.ForEach(item => item.IsValid = false);
-                await _refreshTokenRepository.UpdateRangeAsync(chainRecords);
+                await UpdateAllTokenInChainAsInvalid(existingRefreshToken.UserId,existingRefreshToken.JwtTokenId);
                 return new TokenDto();
             }
 
@@ -181,6 +174,23 @@ namespace MagicVilla.Villa.Api.Services
             return new UserDto();
         }
         
+        public async Task RevokeRefreshToken(TokenDto tokenDto)
+        {
+            // Find an existing refresh token
+            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == tokenDto.RefreshToken);
+            if (existingRefreshToken == null) {
+                return;
+            }
+
+            // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
+            if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
+            {
+                return;
+            }
+
+            await UpdateAllTokenInChainAsInvalid(existingRefreshToken.UserId,existingRefreshToken.JwtTokenId);
+        }
+
         private async Task<string> GetAccessToken(ApplicationUser user, IList<string>? roles, string jwtTokenId)
         {
             // If user was found, generate JWT 
@@ -238,6 +248,18 @@ namespace MagicVilla.Villa.Api.Services
 
             await _refreshTokenRepository.CreateAsync(refreshToken); 
             return refreshToken.RefreshTokenValue;
+        }
+    
+        private async Task UpdateAllTokenInChainAsInvalid(string userId, string tokenId)
+        {
+            var chainRecords = await _refreshTokenRepository
+                .GetAllAsync(u => 
+                    u.UserId == userId 
+                    && u.JwtTokenId == tokenId
+                );
+            
+            chainRecords.ForEach(item => item.IsValid = false);
+            await _refreshTokenRepository.UpdateRangeAsync(chainRecords);
         }
     }
 }

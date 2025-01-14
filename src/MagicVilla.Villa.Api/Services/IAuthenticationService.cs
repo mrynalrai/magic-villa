@@ -8,5 +8,6 @@ namespace MagicVilla.Villa.Api.Services
         Task<UserDto> Register(RegistrationRequestDto registrationRequestDto);
         // Task<LocalUser> Register(RegistrationRequestDto registrationRequestDto);
         Task<TokenDto> RefreshAccessToken(TokenDto tokenDto);
+        Task RevokeRefreshToken(TokenDto tokenDto);
     }
 }

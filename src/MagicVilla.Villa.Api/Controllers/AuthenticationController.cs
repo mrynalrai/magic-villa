@@ -131,5 +131,30 @@ namespace MagicVilla.Villa.Api.Controllers
                 return BadRequest(_apiResponse);
             }
         }
+
+        [HttpPost("revoke")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] TokenDto tokenDto)
+        {
+            if (ModelState.IsValid)
+            {
+                await _authenticationService.RevokeRefreshToken(tokenDto);
+                _apiResponse.IsSuccess = true;
+                _apiResponse.StatusCode = HttpStatusCode.OK;
+                return Ok(_apiResponse);
+            }
+            else
+            {
+                _apiResponse.IsSuccess = false;
+                _apiResponse.ErrorMessages = new List<string>
+                {
+                    "Invalid Input"
+                };
+                _apiResponse.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(_apiResponse);
+            }
+        }
     }
 }
