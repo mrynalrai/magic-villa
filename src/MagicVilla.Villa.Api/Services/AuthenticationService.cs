@@ -15,6 +15,10 @@ namespace MagicVilla.Villa.Api.Services
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager; 
         private readonly string _secretKey;
+        private readonly string _issuer;
+        private readonly string _audience;
+        private readonly double _accessTokenExpiry;
+        private readonly double _refreshTokenExpiry;
         private readonly IUserRepository _userRepository;
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IMapper _mapper;
@@ -31,9 +35,16 @@ namespace MagicVilla.Villa.Api.Services
             _userManager = userManager;
             _roleManager = roleManager;
             _secretKey = configuration.GetValue<string>("ApiSettings:Secret") ?? throw new InvalidOperationException("The 'ApiSettings:Secret' configuration value is missing or null.");
+            _audience = configuration.GetValue<string>("ApiSettings:Audience") ?? throw new InvalidOperationException("The 'ApiSettings:Audience' configuration value is missing or null.");
+            _issuer = configuration.GetValue<string>("ApiSettings:Issuer") ?? throw new InvalidOperationException("The 'ApiSettings:Issuer' configuration value is missing or null.");
             _userRepository = userRepository;
             _refreshTokenRepository = refreshTokenRepository;
             _mapper = mapper;
+
+            var accessTokenExpiryStr = configuration.GetValue<string>("ApiSettings:AccessTokenExpiryMinutes") ?? throw new InvalidOperationException("The 'ApiSettings:AccessTokenExpiryMinutes' configuration value is missing or null.");
+            _accessTokenExpiry = Double.Parse(accessTokenExpiryStr);
+            var refreshTokenExpiryStr = configuration.GetValue<string>("ApiSettings:RefreshTokenExpiryMinutes") ?? throw new InvalidOperationException("The 'ApiSettings:RefreshTokenExpiryMinutes' configuration value is missing or null.");
+            _refreshTokenExpiry = Double.Parse(refreshTokenExpiryStr);
         }
 
 
@@ -206,7 +217,9 @@ namespace MagicVilla.Villa.Api.Services
                     new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId),
                     new Claim(JwtRegisteredClaimNames.Sub, user.Id)
                 }),
-                Expires = DateTime.UtcNow.AddMinutes(60),
+                Expires = DateTime.UtcNow.AddMinutes(_accessTokenExpiry),
+                Issuer = _issuer,
+                Audience = _audience,
                 SigningCredentials = new(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -242,7 +255,7 @@ namespace MagicVilla.Villa.Api.Services
                 IsValid = true,
                 UserId = userId,
                 JwtTokenId = tokenId,
-                ExpiresAt = DateTime.UtcNow.AddMinutes(2),
+                ExpiresAt = DateTime.UtcNow.AddMinutes(_refreshTokenExpiry),
                 RefreshTokenValue = Guid.NewGuid() + "-" + Guid.NewGuid()
             };
 

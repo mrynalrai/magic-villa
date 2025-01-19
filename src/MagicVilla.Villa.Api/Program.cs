@@ -49,6 +49,8 @@ builder.Services.AddVersionedApiExplorer(options => {
 });
 
 var key = builder.Configuration.GetValue<string>("ApiSettings:Secret");
+var audience = builder.Configuration.GetValue<string>("ApiSettings:Audience");
+var issuer = builder.Configuration.GetValue<string>("ApiSettings:Issuer");
 
 builder.Services.AddAuthentication(x =>
 {
@@ -62,8 +64,10 @@ builder.Services.AddAuthentication(x =>
         {
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
-            ValidateIssuer = false,
-            ValidateAudience = false,
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidIssuer = issuer,
+            ValidAudience = audience,
             ClockSkew = TimeSpan.Zero
         };
         // Custom logic to extract token from cookies
