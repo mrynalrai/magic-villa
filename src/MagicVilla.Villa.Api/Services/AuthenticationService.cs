@@ -89,21 +89,22 @@ namespace MagicVilla.Villa.Api.Services
             return loginResponseDto;
         }
 
-        public async Task<TokenDto> RefreshAccessToken(TokenDto tokenDto)
+        public async Task<TokenDto> RefreshAccessToken(string refreshToken)
         {
+            // TODO: Handle the scenario when user requests new refresh token with an already active refresh token which leads to multiple refresh tokens iin active status
             // Find an existing refresh token
-            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == tokenDto.RefreshToken);
+            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == refreshToken);
             if (existingRefreshToken == null) {
                 return new TokenDto();
             }
 
             // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
-            if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
-            {
-                existingRefreshToken.IsValid = false;
-                await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
-                return new TokenDto();
-            }
+            // if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
+            // {
+            //     existingRefreshToken.IsValid = false;
+            //     await _refreshTokenRepository.UpdateAsync(existingRefreshToken);
+            //     return new TokenDto();
+            // }
             
             // When someone tries to use not valid refresh token, fraud possible
             if (!existingRefreshToken.IsValid)
@@ -185,19 +186,19 @@ namespace MagicVilla.Villa.Api.Services
             return new UserDto();
         }
         
-        public async Task RevokeRefreshToken(TokenDto tokenDto)
+        public async Task RevokeRefreshToken(string refreshToken)
         {
             // Find an existing refresh token
-            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == tokenDto.RefreshToken);
+            var existingRefreshToken = await _refreshTokenRepository.GetAsync(rt => rt.RefreshTokenValue == refreshToken);
             if (existingRefreshToken == null) {
                 return;
             }
 
-            // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
-            if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
-            {
-                return;
-            }
+            // // Compare data from existing refresh and access token provided and if there is any mismatch then consider it as a fraud
+            // if (!ValidateAccessToken(tokenDto.AccessToken, existingRefreshToken.UserId, existingRefreshToken.JwtTokenId))
+            // {
+            //     return;
+            // }
 
             await UpdateAllTokenInChainAsInvalid(existingRefreshToken.UserId,existingRefreshToken.JwtTokenId);
         }
@@ -228,25 +229,25 @@ namespace MagicVilla.Villa.Api.Services
             return tokenStr;
         }
 
-        private bool ValidateAccessToken(
-            string accessToken, 
-            string expectedUserId, 
-            string expectedTokenId
-        )
-        {
-            try
-            {
-                var tokenHandler = new JwtSecurityTokenHandler();
-                var jwt = tokenHandler.ReadJwtToken(accessToken);
-                var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
-                var userId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
-                return userId == expectedUserId &&  jwtTokenId == expectedTokenId;
-            }
-            catch
-            {
-                return false;
-            }
-        }
+        // private bool ValidateAccessToken(
+        //     string accessToken, 
+        //     string expectedUserId, 
+        //     string expectedTokenId
+        // )
+        // {
+        //     try
+        //     {
+        //         var tokenHandler = new JwtSecurityTokenHandler();
+        //         var jwt = tokenHandler.ReadJwtToken(accessToken);
+        //         var jwtTokenId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Jti).Value;
+        //         var userId = jwt.Claims.FirstOrDefault(u => u.Type == JwtRegisteredClaimNames.Sub).Value;
+        //         return userId == expectedUserId &&  jwtTokenId == expectedTokenId;
+        //     }
+        //     catch
+        //     {
+        //         return false;
+        //     }
+        // }
 
         private async Task<string> CreateNewRefreshToken(string userId, string tokenId)
         {
