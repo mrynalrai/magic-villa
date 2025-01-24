@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -6,6 +7,10 @@ namespace MagicVilla.Villa.Api
 {
     public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
     {
+        readonly IApiVersionDescriptionProvider provider;
+
+        public ConfigureSwaggerOptions(IApiVersionDescriptionProvider provider) => this.provider = provider;
+        
         public void Configure(SwaggerGenOptions options)
         {
             options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -35,40 +40,27 @@ namespace MagicVilla.Villa.Api
                     new List<string>()
                 }
             });
-            options.SwaggerDoc("v1", new OpenApiInfo
+
+            foreach(var desc in provider.ApiVersionDescriptions)
             {
-                Version = "v1.0",
-                Title = "Magic Villa V1",
-                Description = "API to manage Villas",
-                TermsOfService = new Uri("https://example.com/terms"),
-                Contact = new OpenApiContact
+                options.SwaggerDoc(desc.GroupName, new OpenApiInfo
                 {
-                    Name = "Mrinal Rai",
-                    Url = new Uri("https://mrinalrai.com")
-                },
-                License = new OpenApiLicense
-                {
-                    Name = "Example License",
-                    Url = new Uri("https://example.com/license")
-                }
-            });
-            options.SwaggerDoc("v2", new OpenApiInfo
-            {
-                Version = "v2.0",
-                Title = "Magic Villa V2",
-                Description = "API to manage Villas",
-                TermsOfService = new Uri("https://example.com/terms"),
-                Contact = new OpenApiContact
-                {
-                    Name = "Mrinal Rai",
-                    Url = new Uri("https://mrinalrai.com")
-                },
-                License = new OpenApiLicense
-                {
-                    Name = "Example License",
-                    Url = new Uri("https://example.com/license")
-                }
-            });
+                    Version = desc.ApiVersion.ToString(),
+                    Title = $"Magic Villa {desc.ApiVersion}",
+                    Description = "API to manage Villas",
+                    TermsOfService = new Uri("https://example.com/terms"),
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Mrinal Rai",
+                        Url = new Uri("https://mrinalrai.com")
+                    },
+                    License = new OpenApiLicense
+                    {
+                        Name = "Example License",
+                        Url = new Uri("https://example.com/license")
+                    }
+                });
+            }
         }
     }
 }
