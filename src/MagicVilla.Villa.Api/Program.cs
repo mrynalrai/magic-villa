@@ -112,6 +112,14 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "MagicVillaV1");
     });
 }
+else
+{
+    app.UseSwaggerUI(options => {
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "Magic_VillaV2");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "Magic_VillaV1");
+        options.RoutePrefix = "";   // the Swagger UI will be served at the root URL of the application 
+    });
+}
 
 app.UseStaticFiles();
 
