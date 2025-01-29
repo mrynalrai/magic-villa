@@ -33,6 +33,12 @@ namespace MagicVilla.Villa.Api.Controllers
             _refreshTokenExpiry = Double.Parse(refreshTokenExpiryStr);
         }
 
+        [HttpGet("error")]
+        public async Task<IActionResult> Error()
+        {
+            throw new FileNotFoundException();
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
