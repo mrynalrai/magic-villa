@@ -102,10 +102,11 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+app.UseSwagger();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.UseSwaggerUI(options => 
     {
         options.SwaggerEndpoint("/swagger/v2/swagger.json", "MagicVillaV2");
