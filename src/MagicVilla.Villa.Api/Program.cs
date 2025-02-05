@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
+using MagicVilla.Villa.Api.Filters;
 using MagicVilla.Villa.Api.Models;
 using MagicVilla.Villa.Api.Services;
 using Microsoft.Extensions.Options;
@@ -94,6 +95,7 @@ builder.Services.AddControllers(option => {
         }
     );
     // option.ReturnHttpNotAcceptable=true;
+    option.Filters.Add<CustomExceptionFilter>();
 }).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

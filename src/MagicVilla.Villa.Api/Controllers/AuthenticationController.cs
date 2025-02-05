@@ -39,6 +39,12 @@ namespace MagicVilla.Villa.Api.Controllers
             throw new FileNotFoundException();
         }
 
+        [HttpGet("ImageError")]
+        public async Task<IActionResult> ImageError()
+        {
+            throw new BadImageFormatException("Fake Image Exception");
+        }
+
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
