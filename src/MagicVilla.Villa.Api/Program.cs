@@ -87,16 +87,24 @@ builder.Services.AddAuthentication(x =>
         };
 });
 
-builder.Services.AddControllers(option => {
-    option.CacheProfiles.Add("Default30",
-        new CacheProfile()
+builder.Services
+    .AddControllers(option => {
+        option.CacheProfiles.Add("Default30",
+            new CacheProfile()
+            {
+                Duration = 30   // 30 seconds
+            }
+        );
+        // option.ReturnHttpNotAcceptable=true;
+        option.Filters.Add<CustomExceptionFilter>();
+    })
+    .AddNewtonsoftJson().AddXmlDataContractSerializerFormatters()
+    .ConfigureApiBehaviorOptions(option => {
+        option.ClientErrorMapping[StatusCodes.Status500InternalServerError] = new ClientErrorData
         {
-            Duration = 30   // 30 seconds
-        }
-    );
-    // option.ReturnHttpNotAcceptable=true;
-    option.Filters.Add<CustomExceptionFilter>();
-}).AddNewtonsoftJson().AddXmlDataContractSerializerFormatters();
+            Link = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500"
+        };
+    });
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
