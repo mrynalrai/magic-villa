@@ -166,6 +166,7 @@ app.UseExceptionHandler(error =>
     });
 });
 
+// app.UseMiddleware<CustomExceptionMiddleware>();
 app.UseStaticFiles();
 
 app.UseHttpsRedirection();
